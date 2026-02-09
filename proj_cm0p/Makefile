@@ -73,7 +73,7 @@ SOURCES=$(wildcard ../shared/source/COMPONENT_CM0P/*.c)
 INCLUDES=../shared/include
 
 # Add additional defines to the build process (without a leading -D).
-DEFINES+=CY_CORTEX_M4_APPL_ADDR=0x10008000 CY_IPC_DEFAULT_CFG_DISABLE=1 CYBSP_CUSTOM_SYSCLK_PM_CALLBACK=1
+DEFINES+=CY_CORTEX_M4_APPL_ADDR=0x10008000  CY_IPC_DEFAULT_CFG_DISABLE=1 CYBSP_CUSTOM_SYSCLK_PM_CALLBACK=1
 
 # Select softfp or hardfp floating point. Default is softfp.
 VFP_SELECT=

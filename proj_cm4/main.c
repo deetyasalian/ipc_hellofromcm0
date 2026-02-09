@@ -48,6 +48,7 @@
 #include "ipc_communication.h"
 
 #include <stdio.h>
+#include <string.h>
 
 /****************************************************************************
 * Constants
@@ -75,11 +76,12 @@ static ipc_msg_t ipc_msg = {
     .cpu_status = 0,
     .intr_mask  = USER_IPC_PIPE_INTR_MASK,
     .cmd        = IPC_CMD_INIT,
+    .message    = ""
 };
 
 /* Message variables */
 static volatile bool msg_flag = false;
-static volatile uint32_t msg_value;
+static char msg_buffer[MAX_MESSAGE_SIZE];
 static volatile uint32_t button_flag;
 static volatile bool button_pressed = false;
 
@@ -153,7 +155,10 @@ int main(void)
     IPC Pipes Example \
     ****************** \r\n\n");
 
-    printf("<Press the User Button once to start random number generation, press again to stop>\r\n");
+    printf("This example demonstrates IPC communication between CM0+ and CM4 cores.\r\n");
+    printf("CM0+ will send 'Hello World' messages to CM4 periodically.\r\n\n");
+
+    printf("<Press the User Button once to start message transmission, press again to stop>\r\n\n");
 
     SEND_IPC_MSG(IPC_CMD_INIT);
 
@@ -170,8 +175,8 @@ int main(void)
         {
             msg_flag = false;
 
-            /* Print random number received from CM0+ */
-            printf(" 0x%.8x\n\r", (unsigned int) msg_value);
+            /* Print message received from CM0+ */
+            printf("Received: %s\r\n", msg_buffer);
         }
 
         /* Check if the button was pressed */
@@ -179,7 +184,7 @@ int main(void)
         {
             if(button_pressed)
             {
-                printf("<---Stop--->\n\r");
+                printf("\r\n<---Stop--->\n\r");
                 button_pressed = false;
             }
             SEND_IPC_MSG(IPC_CMD_STOP);
@@ -188,7 +193,7 @@ int main(void)
         {
             if(button_pressed)
             {
-                printf("<---Start--->\n\r");
+                printf("\r\n<---Start--->\n\r");
                 button_pressed = false;
             }
             SEND_IPC_MSG(IPC_CMD_START);
@@ -219,8 +224,9 @@ static void cm4_msg_callback(uint32_t *msg)
         /* Cast received message to the IPC message structure */
         ipc_recv_msg = (ipc_msg_t *) msg;
 
-        /* Extract the message value */
-        msg_value = ipc_recv_msg->value;
+        /* Copy the message to buffer */
+        strncpy(msg_buffer, ipc_recv_msg->message, MAX_MESSAGE_SIZE - 1);
+        msg_buffer[MAX_MESSAGE_SIZE - 1] = '\0';  /* Ensure null termination */
 
         /* Set message flag */
         msg_flag = true;

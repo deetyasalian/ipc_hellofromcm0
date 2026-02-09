@@ -45,14 +45,12 @@
 #include "ipc_communication.h"
 #include "cyhal.h"
 #include "cybsp.h"
+#include <string.h>
+#include <stdio.h>
 /****************************************************************************
 * Constants
 *****************************************************************************/
 #define MCWDT_HW                MCWDT_STRUCT0
-/* TRNG constants */
-#define GARO31_INITSTATE        (0x04c11db7)
-#define FIRO31_INITSTATE        (0x04c11db7)
-#define MAX_TRNG_BIT_SIZE       (32UL)
 
 /****************************************************************************
 * Global variables
@@ -79,13 +77,14 @@ static const cy_stc_mcwdt_config_t mcwdt_cfg =
 };
 
 static volatile uint8_t msg_cmd = 0;
+static uint32_t message_counter = 0;
 
 static ipc_msg_t ipc_msg = {              /* IPC structure to be sent to CM4  */
     .client_id  = IPC_CM0_TO_CM4_CLIENT_ID,
     .cpu_status = 0,
     .intr_mask   = USER_IPC_PIPE_INTR_MASK,
     .cmd        = IPC_CMD_STATUS,
-    .value      = 0
+    .message    = ""
 };
 
 /****************************************************************************
@@ -96,13 +95,11 @@ static void mcwdt_handler(void);
 
 int main(void)
 {
-    uint32_t random_number;
     cy_rslt_t result;
     cy_en_ipc_pipe_status_t ipc_status;
     cy_en_syspm_status_t syspm_status;
     cy_en_sysint_status_t sysint_status;
     cy_en_mcwdt_status_t mcwdt_status;
-    cy_en_crypto_status_t crypt_status;
 
     /* Initialize the device and board peripherals */
     result = cybsp_init() ;
@@ -159,40 +156,27 @@ int main(void)
                     CY_ASSERT(0);
                 }
                 Cy_MCWDT_SetInterruptMask(MCWDT_HW, CY_MCWDT_CTR0);
+
+                /* Reset message counter */
+                message_counter = 0;
                 break;
 
             case IPC_CMD_START:
                 Cy_MCWDT_Enable(MCWDT_HW, CY_MCWDT_CTR0, 0u);
-                crypt_status = Cy_Crypto_Core_Enable(CRYPTO);
-                if (crypt_status != CY_CRYPTO_SUCCESS)
-                {
-                    CY_ASSERT(0);
-                }
                 break;
 
             case IPC_CMD_STOP:
                 Cy_MCWDT_Disable(MCWDT_HW, CY_MCWDT_CTR0, 0u);
-                crypt_status = Cy_Crypto_Core_Disable(CRYPTO);
-                if (crypt_status != CY_CRYPTO_SUCCESS)
-                {
-                    CY_ASSERT(0);
-                }
                 break;
 
             case IPC_CMD_STATUS:
+                /* Increment message counter */
+                message_counter++;
 
-                /* Generate a random number */
-                crypt_status = Cy_Crypto_Core_Trng(CRYPTO, GARO31_INITSTATE,
-                                            FIRO31_INITSTATE,
-                                            MAX_TRNG_BIT_SIZE, &random_number);
-                if (crypt_status != CY_CRYPTO_SUCCESS)
-                {
-                    CY_ASSERT(0);
-                }
+                snprintf(ipc_msg.message, MAX_MESSAGE_SIZE,"Hi #%lu", (unsigned long)message_counter);
 
-                ipc_msg.value = random_number;
 
-                /* Send the random number to CM4 to be printed */
+                /* Send the mesxsage to CM4 to be printed */
                 ipc_status = Cy_IPC_Pipe_SendMessage(USER_IPC_PIPE_EP_ADDR_CM4,
                                         USER_IPC_PIPE_EP_ADDR_CM0,
                                         (uint32_t *) &ipc_msg, NULL);

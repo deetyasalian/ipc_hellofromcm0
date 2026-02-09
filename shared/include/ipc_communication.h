@@ -98,8 +98,11 @@
 #define IPC_CMD_STOP                    0x83
 #define IPC_CMD_STATUS                  0x41
 
+/* Maximum size for message string */
+#define MAX_MESSAGE_SIZE                16
+
 /*******************************************************************************
-* Enumerations
+* Structure definition
 *******************************************************************************/
 typedef struct __attribute__((packed, aligned(4)))
 {
@@ -107,7 +110,7 @@ typedef struct __attribute__((packed, aligned(4)))
     uint8_t     cpu_status;
     uint16_t    intr_mask;
     uint8_t     cmd;
-    uint32_t    value;
+    char        message[MAX_MESSAGE_SIZE];  /* String message instead of uint32_t value */
 } ipc_msg_t ;
 
 
