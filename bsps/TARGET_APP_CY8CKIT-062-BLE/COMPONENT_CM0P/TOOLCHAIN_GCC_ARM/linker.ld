@@ -1,6 +1,6 @@
 /***************************************************************************//**
-* \file cy8c6xx7_cm0plus.ld
-* \version 2.95.1
+* \file cy8c6xx7_cm0plus_bless.ld
+* \version 1.0
 *
 * Linker file for the GNU C compiler.
 *
@@ -19,7 +19,9 @@
 *
 ********************************************************************************
 * \copyright
-* Copyright 2016-2021 Cypress Semiconductor Corporation
+* (c) (2016-2022), Cypress Semiconductor Corporation (an Infineon company) or
+* an affiliate of Cypress Semiconductor Corporation.
+*
 * SPDX-License-Identifier: Apache-2.0
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -63,16 +65,8 @@ MEMORY
      * Your changes must be aligned with the corresponding memory regions for the CM4 core in 'xx_cm4_dual.ld',
      * where 'xx' is the device group; for example, 'cy8c6xx7_cm4_dual.ld'.
      */
-    ram               (rwx)   : ORIGIN = 0x08000000, LENGTH = 0x3000
+    ram               (rwx)   : ORIGIN = 0x08000000, LENGTH = 0x03000
     flash             (rx)    : ORIGIN = 0x10000000, LENGTH = 0x8000
-
-
-    /* This is an unprotected public RAM region, with the placed .cy_sharedmem.
-     * This region is used to place objects that require full access from both cores.
-     * Uncomment the following line, define the region origin and length, and uncomment the placement of
-     * the .cy_sharedmem section below.
-     */
-    /* public_ram        (rw)    : ORIGIN = %REGION_START_ADDRESS%, LENGTH = %REGION_SIZE% */
 
     /* This is a 32K flash region used for EEPROM emulation. This region can also be used as the general purpose flash.
      * You can assign sections to this memory region for only one of the cores.
